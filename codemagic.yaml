@@ -1,17 +1,12 @@
 workflows:
-  ios-workflow:
-    name: iOS Build
+  unsigned-ios:
+    name: Unsigned iOS IPA
     instance_type: mac_mini_m2
     max_build_duration: 60
-    integrations:
-      app_store_connect: codemagic
     environment:
       node: 20.18.0
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.nari2122mh.myapp
     scripts:
       - name: Install dependencies
         script: npm install
@@ -19,12 +14,25 @@ workflows:
         script: npx expo prebuild --platform ios
       - name: Install pods
         script: cd ios && pod install
-      - name: Set up code signing
-        script: xcode-project use-profiles
-      - name: Build IPA
+      - name: Build unsigned archive
         script: |
-          xcode-project build-ipa \
-            --workspace "ios/MyApp.xcworkspace" \
-            --scheme "MyApp"
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          xcodebuild archive \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+      - name: Create IPA
+        script: |
+          mkdir -p "$CM_BUILD_DIR/build/Payload"
+          cp -R "$CM_BUILD_DIR/build/App.xcarchive/Products/Applications/"*.app "$CM_BUILD_DIR/build/Payload/"
+          cd "$CM_BUILD_DIR/build"
+          zip -qr App-unsigned.ipa Payload
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/App-unsigned.ipa
