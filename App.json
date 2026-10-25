@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "My App",
+    "slug": "my-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "bundleIdentifier": "com.nari2122mh.myapp",
+      "supportsTablet": false
+    }
+  }
+}
