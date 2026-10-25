@@ -14,6 +14,9 @@ workflows:
         script: npx expo prebuild --platform ios
       - name: Install pods
         script: cd ios && pod install
+      - name: Patch fmt
+        script: |
+          sed -i '' 's/define FMT_USE_CONSTEVAL 1/define FMT_USE_CONSTEVAL 0/' ios/Pods/fmt/include/fmt/base.h
       - name: Build unsigned archive
         script: |
           cd ios
